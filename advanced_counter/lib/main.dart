@@ -1,7 +1,14 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import 'package:global_state/global_state.dart';
 
 void main() {
-  runApp(const MyApp());
+  runApp(
+    ChangeNotifierProvider(
+      create: (_) => GlobalState(),
+      child: const MyApp(),
+    ),
+  );
 }
 
 class MyApp extends StatelessWidget {
@@ -10,73 +17,64 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Advanced Counter',
+      title: 'Global State Counter',
       theme: ThemeData(primarySwatch: Colors.blue),
-      home: const CounterPage(),
+      home: const CounterListPage(),
     );
   }
 }
 
-class CounterPage extends StatefulWidget {
-  const CounterPage({super.key});
-
-  @override
-  State<CounterPage> createState() => _CounterPageState();
-}
-
-class _CounterPageState extends State<CounterPage> {
-  int _counter = 0;
-
-  void _incrementCounter() {
-    setState(() {
-      _counter++;
-    });
-  }
-
-  void _decrementCounter() {
-    setState(() {
-      if (_counter > 0) {
-        _counter--;
-      }
-    });
-  }
+class CounterListPage extends StatelessWidget {
+  const CounterListPage({super.key});
 
   @override
   Widget build(BuildContext context) {
+    final globalState = Provider.of<GlobalState>(context);
+
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Local State Counter'),
+        title: const Text('Global State Counter List'),
       ),
-      body: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            const Text(
-              'Current Counter Value:',
-              style: TextStyle(fontSize: 20),
-            ),
-            Text(
-              '$_counter',
-              style: const TextStyle(fontSize: 40, fontWeight: FontWeight.bold),
-            ),
-            const SizedBox(height: 20),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                ElevatedButton(
-                  onPressed: _decrementCounter,
-                  child: const Text('Decrement'),
+      body: ListView.builder(
+        itemCount: globalState.counters.length,
+        itemBuilder: (context, index) {
+          final counter = globalState.counters[index];
+          return Card(
+            child: ListTile(
+              leading: CircleAvatar(
+                backgroundColor: counter.color,
+                child: Text(
+                  counter.value.toString(),
+                  style: const TextStyle(color: Colors.white),
                 ),
-                const SizedBox(width: 10),
-                ElevatedButton(
-                  onPressed: _incrementCounter,
-                  child: const Text('Increment'),
-                ),
-              ],
+              ),
+              title: Text(counter.label),
+              trailing: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  IconButton(
+                    icon: const Icon(Icons.remove),
+                    onPressed: () => globalState.decrementCounter(index),
+                  ),
+                  IconButton(
+                    icon: const Icon(Icons.add),
+                    onPressed: () => globalState.incrementCounter(index),
+                  ),
+                  IconButton(
+                    icon: const Icon(Icons.delete),
+                    onPressed: () => globalState.removeCounter(index),
+                  ),
+                ],
+              ),
             ),
-          ],
-        ),
+          );
+        },
+      ),
+      floatingActionButton: FloatingActionButton(
+        onPressed: globalState.addCounter,
+        child: const Icon(Icons.add),
       ),
     );
   }
 }
+ 
